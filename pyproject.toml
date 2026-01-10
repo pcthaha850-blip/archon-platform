@@ -62,10 +62,15 @@ ai = [
     "google-generativeai>=0.3.0",
     "anthropic>=0.18.0",
 ]
+dashboard = [
+    "streamlit>=1.29.0",
+    "plotly>=5.18.0",
+]
 
 [project.scripts]
 archon-ri = "archon_ri.backend.api.main:main"
-archon-prime = "archon_prime.main:main"
+archon-prime = "archon_prime.main:run"
+archon-dashboard = "streamlit.web.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
