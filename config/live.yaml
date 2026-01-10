@@ -1,0 +1,85 @@
+# ARCHON Live Trading Configuration
+# WARNING: This uses real money. Ensure all safety checks pass.
+
+mode: live
+version: "2.0.0"
+
+# Account settings
+account:
+  # Set via environment variables for security
+  # ARCHON_ACCOUNT_ID, ARCHON_ACCOUNT_PASSWORD
+  currency: USD
+  leverage: 100
+
+# Risk parameters - STRICTER for live
+risk:
+  max_risk_per_trade_pct: 0.3      # Max 0.3% per trade (stricter)
+  max_total_risk_pct: 1.5          # Max 1.5% total exposure
+  max_concurrent_positions: 2      # Never exceed 2
+  dd_reduce_threshold_pct: 8.0     # Reduce risk at 8% DD (earlier)
+  dd_halt_threshold_pct: 12.0      # Stop trading at 12% DD (earlier)
+  kelly_min_z: 1.5                 # Higher z-score requirement
+  kelly_scale: 0.10                # More conservative Kelly
+
+# Panic hedge thresholds - TIGHTER for live
+panic_hedge:
+  flash_crash_pct: 1.5             # 1.5% drop triggers hedge
+  flash_crash_window_sec: 60
+  volatility_spike_atr_mult: 2.5   # 2.5x ATR triggers halt
+  spread_explosion_mult: 8.0       # 8x normal spread
+  drawdown_kill_switch_pct: 4.0    # Kill switch at 4% DD
+
+# Signal Gate settings
+signal_gate:
+  require_ai_consensus: true
+  min_confidence: 0.70             # Higher confidence required
+  max_signal_age_sec: 180          # Shorter signal validity
+
+# Trading settings
+trading:
+  symbols:
+    - XAUUSD
+  timeframes:
+    - H1
+    - H4
+  session_times:
+    start: "09:00"
+    end: "17:00"
+    timezone: "UTC"
+  # News filter
+  avoid_high_impact_news: true
+  news_buffer_minutes: 30
+
+# Broker settings
+broker:
+  type: mt5
+  server: # Set via ARCHON_MT5_SERVER
+  timeout_sec: 30
+  retry_attempts: 3
+  retry_delay_sec: 5
+
+# Ghost Mode settings
+ghost_mode:
+  enabled: true
+  hide_sl_tp: true
+  use_mental_stops: true
+
+# Logging
+logging:
+  level: INFO
+  file: logs/archon_live.log
+  max_size_mb: 50
+  backup_count: 30
+
+# Database
+database:
+  path: data/archon_live.db
+  backup_interval_hours: 1
+
+# Alerts
+alerts:
+  enabled: true
+  # Set via environment: ARCHON_ALERT_EMAIL, ARCHON_ALERT_WEBHOOK
+  on_trade: true
+  on_error: true
+  on_drawdown_warning: true

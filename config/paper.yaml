@@ -1,0 +1,68 @@
+# ARCHON Paper Trading Configuration
+# Use this for testing without real money
+
+mode: paper
+version: "2.0.0"
+
+# Account settings
+account:
+  initial_capital: 500
+  currency: USD
+  leverage: 100
+
+# Risk parameters
+risk:
+  max_risk_per_trade_pct: 0.5      # Max 0.5% per trade
+  max_total_risk_pct: 2.0          # Max 2% total exposure
+  max_concurrent_positions: 2      # Never exceed 2
+  dd_reduce_threshold_pct: 10.0    # Reduce risk at 10% DD
+  dd_halt_threshold_pct: 15.0      # Stop trading at 15% DD
+  kelly_min_z: 1.25                # Minimum z-score for Kelly
+  kelly_scale: 0.15                # Kelly scaling factor
+
+# Panic hedge thresholds
+panic_hedge:
+  flash_crash_pct: 2.0             # 2% drop in 60s triggers hedge
+  flash_crash_window_sec: 60
+  volatility_spike_atr_mult: 3.0   # 3x ATR triggers halt
+  spread_explosion_mult: 10.0      # 10x normal spread
+  drawdown_kill_switch_pct: 5.0    # Kill switch at 5% DD
+
+# Signal Gate settings
+signal_gate:
+  require_ai_consensus: true
+  min_confidence: 0.65
+  max_signal_age_sec: 300
+
+# Trading settings
+trading:
+  symbols:
+    - XAUUSD
+    - EURUSD
+    - GBPUSD
+  timeframes:
+    - M15
+    - H1
+    - H4
+  session_times:
+    start: "08:00"
+    end: "20:00"
+    timezone: "UTC"
+
+# Broker settings
+broker:
+  type: simulation
+  slippage_pips: 2
+  commission_per_lot: 7.0
+
+# Logging
+logging:
+  level: DEBUG
+  file: logs/archon_paper.log
+  max_size_mb: 10
+  backup_count: 5
+
+# Database
+database:
+  path: data/archon_paper.db
+  backup_interval_hours: 24

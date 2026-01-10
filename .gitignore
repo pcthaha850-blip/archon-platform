@@ -1,0 +1,86 @@
+# ARCHON .gitignore
+
+# Runtime artifacts
+*.db
+*.log
+*.pid
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+env/
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# State files
+state/
+data/*.db
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Test artifacts
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# Build
+dist/
+build/
+*.manifest
+*.spec
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Secrets
+secrets/
+credentials/
+*.pem
+*.key
+
+# MT5 specific
+*.ex5
+*.mq5
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.bak
