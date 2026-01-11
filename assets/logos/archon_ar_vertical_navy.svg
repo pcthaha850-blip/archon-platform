@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 500" width="200" height="500">
+  <!-- Vertical ARCHON lockup - Navy background -->
+  
+  <!-- Background -->
+  <rect x="0" y="0" width="200" height="500" fill="#0033A0"/>
+  
+  <!-- ARCHON text rotated 90° counter-clockwise -->
+  <g transform="translate(130, 450) rotate(-90)">
+    <!-- A -->
+    <text x="0" y="0" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-weight="900" font-size="68" fill="#FFFFFF">A</text>
+    <!-- R -->
+    <text x="55" y="0" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-weight="900" font-size="68" fill="#FFFFFF">R</text>
+    <!-- C -->
+    <text x="110" y="0" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-weight="900" font-size="68" fill="#FFFFFF">C</text>
+    <!-- H -->
+    <text x="165" y="0" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-weight="900" font-size="68" fill="#FFFFFF">H</text>
+    
+    <!-- Sphere O with AR -->
+    <g transform="translate(238, -22)">
+      <circle cx="0" cy="0" r="32" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+      <text x="0" y="10" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-weight="900" font-size="28" fill="#FFFFFF" text-anchor="middle">AR</text>
+    </g>
+    
+    <!-- N -->
+    <text x="290" y="0" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-weight="900" font-size="68" fill="#FFFFFF">N</text>
+  </g>
+</svg>

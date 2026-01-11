@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Icon-only sigil - Navy background -->
+  
+  <!-- Background -->
+  <rect x="0" y="0" width="200" height="200" fill="#0033A0"/>
+  
+  <!-- Circle with AR -->
+  <g transform="translate(100, 100)">
+    <circle cx="0" cy="0" r="75" fill="none" stroke="#FFFFFF" stroke-width="6"/>
+    <text x="0" y="18" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-weight="900" font-size="58" fill="#FFFFFF" text-anchor="middle">AR</text>
+  </g>
+</svg>
