@@ -1,0 +1,35 @@
+# ARCHON PRIME Deploy - Git Exclusions
+
+# Environment files with secrets
+.env
+.env.dev
+.env.staging
+.env.prod
+.env.local
+
+# Keep example files
+!.env.example
+!.env.staging.example
+!.env.prod.example
+
+# Docker volumes (if local)
+volumes/
+data/
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+
+# Secrets
+secrets/
+*.secret
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp

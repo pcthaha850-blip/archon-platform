@@ -1,0 +1,125 @@
+# ARCHON PRIME - Development Environment
+# Local development with hot reload and debugging
+#
+# Usage:
+#   docker-compose -f deploy/docker-compose.dev.yml up -d
+#   docker-compose -f deploy/docker-compose.dev.yml logs -f api
+
+version: "3.9"
+
+services:
+  # ============================================================
+  # PostgreSQL Database
+  # ============================================================
+  db:
+    image: postgres:15-alpine
+    container_name: archon_db_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: archon_dev
+      POSTGRES_PASSWORD: archon_dev_password
+      POSTGRES_DB: archon_prime_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U archon_dev -d archon_prime_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - archon_dev_network
+
+  # ============================================================
+  # Redis (Rate Limiting, Caching, Idempotency Store)
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: archon_redis_dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - archon_dev_network
+
+  # ============================================================
+  # ARCHON PRIME API (Development Mode)
+  # ============================================================
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: archon_api_dev
+    restart: unless-stopped
+    environment:
+      # Application
+      APP_ENV: development
+      DEBUG: "true"
+      HOST: 0.0.0.0
+      PORT: 8000
+
+      # Database
+      DATABASE_URL: postgresql+asyncpg://archon_dev:archon_dev_password@db:5432/archon_prime_dev
+
+      # Redis
+      REDIS_URL: redis://redis:6379/0
+
+      # Security (OVERRIDE IN .env.dev)
+      JWT_SECRET_KEY: dev-secret-key-change-in-production
+      ENCRYPTION_KEY: dev-encryption-key-32-bytes-long!
+
+      # CORS (permissive for dev)
+      CORS_ORIGINS: '["http://localhost:3000","http://localhost:5173","http://127.0.0.1:3000"]'
+
+      # Logging
+      LOG_LEVEL: DEBUG
+    ports:
+      - "8000:8000"
+    volumes:
+      # Hot reload: mount source code
+      - ..:/app:ro
+      - /app/__pycache__
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - archon_dev_network
+    # Override CMD for development with reload
+    command: ["python", "-m", "uvicorn", "archon_prime.api.main:app",
+              "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  # ============================================================
+  # Adminer (Database GUI)
+  # ============================================================
+  adminer:
+    image: adminer:latest
+    container_name: archon_adminer_dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - archon_dev_network
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+
+networks:
+  archon_dev_network:
+    driver: bridge

@@ -1,0 +1,91 @@
+# ARCHON PRIME - Docker Build Exclusions
+# Reduces build context and image size
+
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Documentation
+docs/_build/
+
+# Deployment (don't include in image)
+deploy/
+docker-compose*.yml
+Dockerfile
+
+# Environment files (NEVER include secrets)
+.env
+.env.*
+!.env.example
+
+# Logs and databases
+*.log
+*.db
+*.sqlite
+logs/
+data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Test artifacts
+tests/
+*.test.py
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# Alembic versions (include in image for migrations)
+# alembic/versions/

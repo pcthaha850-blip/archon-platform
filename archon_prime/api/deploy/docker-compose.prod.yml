@@ -1,0 +1,215 @@
+# ARCHON PRIME - Production Environment
+# Institutional-grade deployment configuration
+#
+# REQUIREMENTS:
+#   - External managed PostgreSQL (RDS, Cloud SQL, or HA cluster)
+#   - External managed Redis (ElastiCache, Memorystore, or Sentinel)
+#   - Secrets from vault or cloud secret manager
+#   - SSL termination at load balancer (Nginx, ALB, Cloud LB)
+#   - Container orchestration (Docker Swarm, ECS, or Kubernetes)
+#
+# Usage (Docker Swarm):
+#   docker stack deploy -c deploy/docker-compose.prod.yml archon
+#
+# Usage (Single Host - NOT recommended for production):
+#   docker-compose -f deploy/docker-compose.prod.yml --env-file .env.prod up -d
+
+version: "3.9"
+
+services:
+  # ============================================================
+  # ARCHON PRIME API (Production)
+  # ============================================================
+  api:
+    image: ${DOCKER_REGISTRY:-archon}/archon-prime-api:${VERSION:-latest}
+    # For local builds, uncomment:
+    # build:
+    #   context: ..
+    #   dockerfile: Dockerfile
+    restart: always
+    environment:
+      # Application
+      APP_ENV: production
+      DEBUG: "false"
+      HOST: 0.0.0.0
+      PORT: 8000
+
+      # Database (EXTERNAL MANAGED)
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL required}
+
+      # Redis (EXTERNAL MANAGED)
+      REDIS_URL: ${REDIS_URL:?REDIS_URL required}
+
+      # Security (FROM VAULT/SECRET MANAGER)
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY required}
+      JWT_REFRESH_SECRET_KEY: ${JWT_REFRESH_SECRET_KEY:?JWT_REFRESH_SECRET_KEY required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY required}
+
+      # CORS (production frontend only)
+      CORS_ORIGINS: ${CORS_ORIGINS:-'["https://app.archon.ai"]'}
+
+      # Logging
+      LOG_LEVEL: WARNING
+      LOG_FORMAT: json
+
+      # Rate Limiting
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_REQUESTS: 60
+      RATE_LIMIT_WINDOW: 60
+
+      # Sentry/Error Tracking (optional)
+      SENTRY_DSN: ${SENTRY_DSN:-}
+
+      # Feature Flags
+      MAINTENANCE_MODE: ${MAINTENANCE_MODE:-false}
+    ports:
+      - target: 8000
+        published: 8000
+        protocol: tcp
+        mode: ingress
+    networks:
+      - archon_prod_network
+    deploy:
+      mode: replicated
+      replicas: ${API_REPLICAS:-3}
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 2G
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+      placement:
+        constraints:
+          - node.role == worker
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.archon-api.rule=Host(`api.archon.ai`)"
+        - "traefik.http.routers.archon-api.tls=true"
+        - "traefik.http.services.archon-api.loadbalancer.server.port=8000"
+        - "traefik.http.services.archon-api.loadbalancer.healthcheck.path=/api/health"
+        - "traefik.http.services.archon-api.loadbalancer.healthcheck.interval=10s"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+    secrets:
+      - jwt_secret
+      - encryption_key
+
+  # ============================================================
+  # Background Workers (Production)
+  # ============================================================
+  worker:
+    image: ${DOCKER_REGISTRY:-archon}/archon-prime-api:${VERSION:-latest}
+    restart: always
+    environment:
+      APP_ENV: production
+      DEBUG: "false"
+      WORKER_MODE: "true"
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL required}
+      REDIS_URL: ${REDIS_URL:?REDIS_URL required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY required}
+      LOG_LEVEL: INFO
+      LOG_FORMAT: json
+    networks:
+      - archon_prod_network
+    deploy:
+      mode: replicated
+      replicas: ${WORKER_REPLICAS:-2}
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 1G
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+      placement:
+        constraints:
+          - node.role == worker
+    command: ["python", "-m", "archon_prime.api.worker"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+networks:
+  archon_prod_network:
+    driver: overlay
+    attachable: true
+    driver_opts:
+      encrypted: "true"
+
+secrets:
+  jwt_secret:
+    external: true
+  encryption_key:
+    external: true
+
+# ============================================================
+# PRODUCTION DEPLOYMENT NOTES
+# ============================================================
+#
+# 1. DATABASE:
+#    Use managed PostgreSQL with:
+#    - Multi-AZ deployment
+#    - Automated backups (7+ day retention)
+#    - Connection pooling (PgBouncer or RDS Proxy)
+#    - Encryption at rest
+#
+# 2. REDIS:
+#    Use managed Redis with:
+#    - Cluster mode for HA
+#    - Persistence enabled
+#    - Encryption in transit
+#
+# 3. SECRETS:
+#    Store in:
+#    - AWS Secrets Manager
+#    - HashiCorp Vault
+#    - Docker Swarm secrets
+#    - Kubernetes secrets
+#
+# 4. SSL/TLS:
+#    Terminate at load balancer:
+#    - AWS ALB/NLB
+#    - Traefik with Let's Encrypt
+#    - Nginx reverse proxy
+#
+# 5. MONITORING:
+#    - Prometheus metrics endpoint
+#    - Grafana dashboards
+#    - Sentry for error tracking
+#    - CloudWatch/Datadog for logs
+#
+# 6. SCALING:
+#    - Horizontal: Increase API_REPLICAS
+#    - Vertical: Increase resource limits
+#    - Auto-scaling based on CPU/memory
+#
+# ============================================================
