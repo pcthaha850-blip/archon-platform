@@ -76,9 +76,9 @@ class MT5ConnectionPool:
             idle_timeout: Seconds before idle connection is closed
             reconnect_interval: Seconds between reconnection attempts
         """
-        self.max_connections = max_connections or settings.MT5_MAX_CONNECTIONS
-        self.idle_timeout = idle_timeout or settings.MT5_IDLE_TIMEOUT
-        self.reconnect_interval = reconnect_interval or settings.MT5_RECONNECT_INTERVAL
+        self.max_connections = max_connections or settings.MT5_POOL_MAX_CONNECTIONS
+        self.idle_timeout = idle_timeout or settings.MT5_POOL_IDLE_TIMEOUT_SEC
+        self.reconnect_interval = reconnect_interval or settings.MT5_RECONNECT_DELAY_SEC
 
         self._connections: Dict[UUID, MT5Connection] = {}
         self._lock = asyncio.Lock()

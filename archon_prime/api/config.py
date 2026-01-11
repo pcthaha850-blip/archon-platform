@@ -5,8 +5,12 @@ Environment-based settings for the FastAPI backend.
 """
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Optional
 from pydantic_settings import BaseSettings
+
+# Get the directory containing this config file
+CONFIG_DIR = Path(__file__).parent
 
 
 class Settings(BaseSettings):
@@ -51,9 +55,11 @@ class Settings(BaseSettings):
     REDIS_URL: Optional[str] = None
 
     class Config:
-        env_file = ".env"
+        # Use absolute path to find .env relative to this config file
+        env_file = str(CONFIG_DIR / ".env")
         env_file_encoding = "utf-8"
         case_sensitive = True
+        extra = "ignore"  # Ignore frontend vars (VITE_*)
 
 
 @lru_cache()
