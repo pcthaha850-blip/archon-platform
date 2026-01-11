@@ -54,12 +54,14 @@ def create_app() -> FastAPI:
     from archon_prime.api.profiles.routes import router as profiles_router
     from archon_prime.api.trading.routes import router as trading_router
     from archon_prime.api.websocket.routes import router as websocket_router
+    from archon_prime.api.admin.routes import router as admin_router
 
     app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
     app.include_router(users_router, prefix="/api/v1/users", tags=["Users"])
     app.include_router(profiles_router, prefix="/api/v1/profiles", tags=["MT5 Profiles"])
     app.include_router(trading_router, prefix="/api/v1/trading", tags=["Trading"])
     app.include_router(websocket_router, prefix="/api/v1", tags=["WebSocket"])
+    app.include_router(admin_router, prefix="/api/v1/admin", tags=["Admin"])
 
     # Health check endpoint
     @app.get("/api/health", tags=["Health"])
