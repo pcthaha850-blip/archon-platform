@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from archon_prime.api.config import settings
 from archon_prime.api.db.session import init_db, close_db
+from archon_prime.api.services.mt5_pool import init_mt5_pool, close_mt5_pool
 
 
 @asynccontextmanager
@@ -17,8 +18,10 @@ async def lifespan(app: FastAPI):
     """Application lifespan manager."""
     # Startup
     await init_db()
+    await init_mt5_pool()
     yield
     # Shutdown
+    await close_mt5_pool()
     await close_db()
 
 
@@ -45,9 +48,11 @@ def create_app() -> FastAPI:
     # Include routers
     from archon_prime.api.auth.routes import router as auth_router
     from archon_prime.api.users.routes import router as users_router
+    from archon_prime.api.profiles.routes import router as profiles_router
 
     app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
     app.include_router(users_router, prefix="/api/v1/users", tags=["Users"])
+    app.include_router(profiles_router, prefix="/api/v1/profiles", tags=["MT5 Profiles"])
 
     # Health check endpoint
     @app.get("/api/health", tags=["Health"])
