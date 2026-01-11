@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from archon_prime.api.config import settings
 from archon_prime.api.db.session import init_db, close_db
 from archon_prime.api.services.mt5_pool import init_mt5_pool, close_mt5_pool
+from archon_prime.api.services.background_tasks import init_background_workers, close_background_workers
 from archon_prime.api.websocket.manager import init_websocket_manager, close_websocket_manager
 
 
@@ -21,8 +22,10 @@ async def lifespan(app: FastAPI):
     await init_db()
     await init_mt5_pool()
     await init_websocket_manager()
+    await init_background_workers()
     yield
     # Shutdown
+    await close_background_workers()
     await close_websocket_manager()
     await close_mt5_pool()
     await close_db()
@@ -55,11 +58,13 @@ def create_app() -> FastAPI:
     from archon_prime.api.trading.routes import router as trading_router
     from archon_prime.api.websocket.routes import router as websocket_router
     from archon_prime.api.admin.routes import router as admin_router
+    from archon_prime.api.signals.routes import router as signals_router
 
     app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
     app.include_router(users_router, prefix="/api/v1/users", tags=["Users"])
     app.include_router(profiles_router, prefix="/api/v1/profiles", tags=["MT5 Profiles"])
     app.include_router(trading_router, prefix="/api/v1/trading", tags=["Trading"])
+    app.include_router(signals_router, prefix="/api/v1/signals", tags=["Signal Gate"])
     app.include_router(websocket_router, prefix="/api/v1", tags=["WebSocket"])
     app.include_router(admin_router, prefix="/api/v1/admin", tags=["Admin"])
 
