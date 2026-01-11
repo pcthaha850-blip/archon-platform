@@ -66,7 +66,7 @@ class AdminService:
         # Active users (with connected profiles)
         active_users = await self.db.scalar(
             select(func.count(func.distinct(MT5Profile.user_id))).where(
-                MT5Profile.is_connected == True
+                MT5Profile.connection_status == "connected"
             )
         )
 
@@ -77,7 +77,7 @@ class AdminService:
 
         connected_profiles = await self.db.scalar(
             select(func.count(MT5Profile.id)).where(
-                MT5Profile.is_connected == True
+                MT5Profile.connection_status == "connected"
             )
         )
 
@@ -93,7 +93,7 @@ class AdminService:
         )
 
         total_profit = await self.db.scalar(
-            select(func.sum(Position.profit))
+            select(func.sum(Position.unrealized_pnl))
         ) or Decimal("0")
 
         # WebSocket connections
