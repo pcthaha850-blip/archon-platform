@@ -184,7 +184,7 @@ class AdminService:
                 select(func.count(MT5Profile.id)).where(
                     and_(
                         MT5Profile.user_id == user.id,
-                        MT5Profile.is_connected == True,
+                        MT5Profile.connection_status == "connected",
                     )
                 )
             )
@@ -204,7 +204,7 @@ class AdminService:
                     subscription_tier=user.subscription_tier,
                     is_active=user.is_active,
                     is_admin=user.is_admin,
-                    email_verified=user.email_verified,
+                    email_verified=user.is_verified,
                     profile_count=profile_count or 0,
                     connected_profile_count=connected_count or 0,
                     total_balance=total_balance,
@@ -259,7 +259,10 @@ class AdminService:
             if filters.user_id:
                 query = query.where(MT5Profile.user_id == filters.user_id)
             if filters.is_connected is not None:
-                query = query.where(MT5Profile.is_connected == filters.is_connected)
+                if filters.is_connected:
+                    query = query.where(MT5Profile.connection_status == "connected")
+                else:
+                    query = query.where(MT5Profile.connection_status != "connected")
             if filters.is_trading_enabled is not None:
                 query = query.where(
                     MT5Profile.is_trading_enabled == filters.is_trading_enabled
@@ -293,7 +296,7 @@ class AdminService:
                 )
             )
             total_profit = await self.db.scalar(
-                select(func.sum(Position.profit)).where(
+                select(func.sum(Position.unrealized_pnl)).where(
                     Position.profile_id == profile.id
                 )
             )
@@ -305,7 +308,7 @@ class AdminService:
                     user_email=profile.user.email if profile.user else "",
                     name=profile.name,
                     mt5_login=profile.mt5_login,
-                    mt5_server=profile.mt5_server,
+                    mt5_server=profile.broker_server,
                     broker_name=profile.broker_name,
                     account_type=profile.account_type,
                     is_connected=profile.is_connected,
@@ -334,7 +337,7 @@ class AdminService:
 
         # Disable trading and disconnect
         profile.is_trading_enabled = False
-        profile.is_connected = False
+        profile.connection_status = "disconnected"
         profile.updated_at = datetime.now(timezone.utc)
 
         await self.db.commit()

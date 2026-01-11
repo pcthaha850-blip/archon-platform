@@ -101,7 +101,14 @@ class MT5Profile(Base):
     # Connection status
     connection_status: Mapped[str] = mapped_column(String(50), default="disconnected")
     last_connected_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    last_sync_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     last_error: Mapped[Optional[str]] = mapped_column(Text)
+
+    # Account info (synced from MT5)
+    balance: Mapped[float] = mapped_column(Numeric(20, 4), default=0)
+    equity: Mapped[float] = mapped_column(Numeric(20, 4), default=0)
+    broker_name: Mapped[Optional[str]] = mapped_column(String(255))
+    account_type: Mapped[Optional[str]] = mapped_column(String(50))
 
     # Trading configuration
     risk_settings: Mapped[dict] = mapped_column(JSONB, default=dict)
@@ -122,6 +129,17 @@ class MT5Profile(Base):
     positions: Mapped[list["Position"]] = relationship(
         "Position", back_populates="profile", cascade="all, delete-orphan"
     )
+
+    # Computed properties for compatibility
+    @property
+    def is_connected(self) -> bool:
+        """Check if profile is connected."""
+        return self.connection_status == "connected"
+
+    @property
+    def mt5_server(self) -> str:
+        """Alias for broker_server."""
+        return self.broker_server
 
     def __repr__(self) -> str:
         return f"<MT5Profile {self.name} ({self.mt5_login}@{self.broker_server})>"
@@ -233,6 +251,7 @@ class SystemEvent(Base):
 
     event_type: Mapped[str] = mapped_column(String(50), nullable=False)
     severity: Mapped[str] = mapped_column(String(20), default="info")
+    source: Mapped[str] = mapped_column(String(100), default="system")
 
     user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id")
@@ -243,6 +262,13 @@ class SystemEvent(Base):
 
     message: Mapped[str] = mapped_column(Text, nullable=False)
     details: Mapped[Optional[dict]] = mapped_column(JSONB)
+
+    # Acknowledgement tracking
+    acknowledged: Mapped[bool] = mapped_column(Boolean, default=False)
+    acknowledged_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id")
+    )
+    acknowledged_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow
